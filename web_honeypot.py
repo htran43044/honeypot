@@ -1,47 +1,60 @@
-# Libraries
 import logging 
 from logging.handlers import RotatingFileHandler
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request
 
 # Logging format
 logging_format = logging.Formatter('%(asctime)s %(message)s')
 
 # HTTP Logger
-funnel_logger = logging.getLogger('HTTPLogger') # Capture the username & password, IP addr
-funnel_logger.setLevel(logging.INFO) # Provide the info logger
-funnel_handler = RotatingFileHandler('http_audits.log', maxBytes = 2000, backupCount = 5)
+funnel_logger = logging.getLogger('HTTPLogger')
+funnel_logger.setLevel(logging.INFO)
+funnel_handler = RotatingFileHandler('http_audits.log', maxBytes=2000, backupCount=5)
 funnel_handler.setFormatter(logging_format)
 funnel_logger.addHandler(funnel_handler)
 
-# Baseline honeypot
 def web_honeypot(input_username="admin", input_password="password"):
+    app = Flask(__name__, template_folder='templates')  # Cập nhật template_folder thành 'templates'
 
-    app = Flask(__name__)
     @app.route('/')
-
     def index():
         return render_template('index.html')
-    @app.route('/admin_dashboard', methods=['POST'])
 
+    @app.route('/admin_dashboard', methods=['POST'])
     def login():
         username = request.form['username']
         password = request.form['password']
-
         ip_address = request.remote_addr
-
         funnel_logger.info(f'Client with IP Address: {ip_address} entered\n Username: {username}, Password: {password}')
-
         if username == input_username and password == input_password:
             return "Login successful!"
         else:
             return "Invalid username or password. Please Try Again."
+
+    @app.route('/register')
+    def register():
+        return render_template('register.html')
+
+    @app.route('/register_user', methods=['POST'])
+    def register_user():
+        if request.method == 'POST':
+            print("Received POST request on /register_user")
+            fullname = request.form.get('fullname')
+            password = request.form.get('password')
+            email = request.form.get('email')
+            ip_address = request.remote_addr
+            if not fullname or not password or not email:
+                print("Missing form data!")
+                return "Missing form data!", 400
+            funnel_logger.info(f'NEW REGISTER - IP: {ip_address}, Fullname: {fullname}, Password: {password}, Email: {email}')
+            print(f'LOG: NEW REGISTER - IP: {ip_address}, Fullname: {fullname}, Password: {password}, Email: {email}')
+            return "Registration Successful"
+        return "Method not allowed", 405
+
     return app
-    
+
 def run_web_honeypot(port=5000, input_username="admin", input_password="password"):
-    run_web_honeypot_app = web_honeypot(input_username, input_password) 
+    run_web_honeypot_app = web_honeypot(input_username, input_password)
     run_web_honeypot_app.run(debug=True, port=port, host="0.0.0.0")
 
-    return run_web_honeypot_app
-
-run_web_honeypot(port=5000, input_username="admin", input_password="password")
-    
+if __name__ == "__main__":
+    run_web_honeypot(port=5000, input_username="admin", input_password="password")

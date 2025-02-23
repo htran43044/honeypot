@@ -20,7 +20,7 @@ def web_honeypot(input_username="admin", input_password="password"):
     @app.route('/')
 
     def index():
-        return render_template('web_landingpage.html')
+        return render_template('index.html')
     @app.route('/admin_dashboard', methods=['POST'])
 
     def login():

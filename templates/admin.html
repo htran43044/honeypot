@@ -12,9 +12,9 @@
 <body>
     <!-- Sidebar -->
     <div class="sidebar">
-        <div class="logo">Admin Dashboard</div>
-        <a href="admin.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
-        <a href="upload.html"><i class="fas fa-upload"></i> Upload Files</a>
+        <div class="logo">Admin Site</div>
+        <a href="/admin"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+        <a href="/upload"><i class="fas fa-upload"></i> Upload Files</a>
         <a href="#"><i class="fas fa-users"></i> Users</a>
         <a href="#"><i class="fas fa-chart-bar"></i> Analytics</a>
         <a href="/" class="mt-5" onclick="return confirmLogout();"><i class="fas fa-sign-out-alt"></i> Logout</a>
@@ -105,5 +105,6 @@
             return false;
         }
     </script>
+    <button id="logoutBtn">Logout</button>
 </body>
 </html>

@@ -1,19 +1,21 @@
-import logging 
+import logging
 from logging.handlers import RotatingFileHandler
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect, url_for
+import json
+import time
 
 # Logging format
-logging_format = logging.Formatter('%(asctime)s %(message)s')
+logging_format = logging.Formatter('%(message)s')
 
 # HTTP Logger
 funnel_logger = logging.getLogger('HTTPLogger')
 funnel_logger.setLevel(logging.INFO)
-funnel_handler = RotatingFileHandler('http_audits.log', maxBytes=2000, backupCount=5)
+funnel_handler = RotatingFileHandler('http_audits.json', maxBytes=2000, backupCount=5)
 funnel_handler.setFormatter(logging_format)
 funnel_logger.addHandler(funnel_handler)
 
 def web_honeypot(input_username="admin", input_password="password"):
-    app = Flask(__name__, template_folder='templates')  # Cập nhật template_folder thành 'templates'
+    app = Flask(__name__, template_folder='templates')
 
     @app.route('/')
     def index():
@@ -24,11 +26,37 @@ def web_honeypot(input_username="admin", input_password="password"):
         username = request.form['username']
         password = request.form['password']
         ip_address = request.remote_addr
-        funnel_logger.info(f'Client with IP Address: {ip_address} entered\n Username: {username}, Password: {password}')
+        log_entry = {"timestamp": time.ctime(), "ip": ip_address, "type": "login", "username": username, "password": password}
+        funnel_logger.info(json.dumps(log_entry))
         if username == input_username and password == input_password:
-            return "Login successful!"
+            return redirect(url_for('admin'))  
+        elif "'" in username or "'" in password:  # Giả lập SQL Injection
+            return "SQL Error: Invalid query near ' OR 1=1 --"
         else:
-            return "Invalid username or password. Please Try Again."
+            return "Invalid credentials. Try again."
+
+    @app.route('/admin')
+    def admin():
+        ip_address = request.remote_addr
+        log_entry = {"timestamp": time.ctime(), "ip": ip_address, "type": "admin_access"}
+        funnel_logger.info(json.dumps(log_entry))
+        return render_template('admin.html')
+
+    @app.route('/upload', methods=['GET', 'POST'])
+    def upload_file():
+        ip_address = request.remote_addr
+        if request.method == 'POST':
+            file = request.files.get('file')
+            if file:
+                log_entry = {"timestamp": time.ctime(), "ip": ip_address, "type": "upload", "filename": file.filename}
+                funnel_logger.info(json.dumps(log_entry))
+                return "File uploaded successfully!"
+            else:
+                log_entry = {"timestamp": time.ctime(), "ip": ip_address, "type": "upload_access", "error": "No file uploaded"}
+                funnel_logger.info(json.dumps(log_entry))
+        log_entry = {"timestamp": time.ctime(), "ip": ip_address, "type": "upload_access"}
+        funnel_logger.info(json.dumps(log_entry))
+        return render_template('upload.html')
 
     @app.route('/register')
     def register():
@@ -45,8 +73,8 @@ def web_honeypot(input_username="admin", input_password="password"):
             if not fullname or not password or not email:
                 print("Missing form data!")
                 return "Missing form data!", 400
-            funnel_logger.info(f'NEW REGISTER - IP: {ip_address}, Fullname: {fullname}, Password: {password}, Email: {email}')
-            print(f'LOG: NEW REGISTER - IP: {ip_address}, Fullname: {fullname}, Password: {password}, Email: {email}')
+            log_entry = {"timestamp": time.ctime(), "ip": ip_address, "type": "register", "fullname": fullname, "password": password, "email": email}
+            funnel_logger.info(json.dumps(log_entry))
             return "Registration Successful"
         return "Method not allowed", 405
 

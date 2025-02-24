@@ -4,6 +4,8 @@ from logging.handlers import RotatingFileHandler
 import socket
 import paramiko
 import threading
+import time
+import json
 
 # Constants
 logging_format = logging.Formatter('%(message)s')
@@ -14,14 +16,14 @@ host_key = paramiko.RSAKey(filename='server.key', password='password') # private
 # Loggers & Logging files
 funnel_logger = logging.getLogger('FunnelLogger') # Capture the username & password, IP addr
 funnel_logger.setLevel(logging.INFO) # Provide the info logger
-funnel_handler = RotatingFileHandler('cmd_audits.log', maxBytes = 2000, backupCount = 5)
+funnel_handler = RotatingFileHandler('cmd_audits.json', maxBytes = 2000, backupCount = 5)
 funnel_handler.setFormatter(logging_format)
 funnel_logger.addHandler(funnel_handler)
 
 # Capture the emulated shell what commands the bots,.. a hackers are using
 creds_logger = logging.getLogger('CredsLogger') # Capture the username & password, IP addr
 creds_logger.setLevel(logging.INFO) # Provide the info logger
-creds_handler = RotatingFileHandler('creds_audits.log', maxBytes = 2000, backupCount = 5)
+creds_handler = RotatingFileHandler('creds_audits.json', maxBytes = 2000, backupCount = 5)
 creds_handler.setFormatter(logging_format)
 creds_logger.addHandler(creds_handler)
 
@@ -38,6 +40,8 @@ def emulated_shell(channel, client_ip):
         command += char # make all of those character variables into a string
 
         if char == b"\r":
+            cmd_str = command.strip().decode()
+            log_entry = {"timestamp": time.ctime(), "ip": client_ip, "command": cmd_str}
             if command.strip() == b'exit':
                 response = b'\n Goodbye!\n'
                 channel.close()
@@ -55,8 +59,8 @@ def emulated_shell(channel, client_ip):
                 creds_logger.info(f'Command {command.strip()}' + 'executed by ' + f'{client_ip}')
             else:
                 response = b"\n" + bytes(command.strip()) + b"\r\n"
-                creds_logger.info(f'Command {command.strip()}' + 'executed by ' + f'{client_ip}')
-       
+            creds_logger.info(json.dumps(log_entry))
+
             channel.send(response)
             channel.send(b'corporate-jumpbox2$ ')
             command = b''      
@@ -81,8 +85,9 @@ class Server(paramiko.ServerInterface):
     
     # check pass
     def check_auth_password(self, username, password):
-        funnel_logger.info(f'Client {self.client_ip} attempted connection with ' + f'username: {username},' + f'username: {username}, ' + f'password')
-        creds_logger.info(f'{self.client_ip}, {username}, {password}')
+        log_entry = {"timestamp": time.ctime(), "ip": self.client_ip, "username": username, "password": password}
+        funnel_logger.info(json.dumps(log_entry))
+        creds_logger.info(json.dumps(log_entry))
         if self.input_username is not None and self.input_password is not None:
             if username == self.input_username and password == self.input_password:
                 return paramiko.AUTH_SUCCESSFUL

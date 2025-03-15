@@ -9,24 +9,28 @@ import os
 # Constants
 SSH_BANNER = "SSH-2.0-MySSHServer_1.0"
 LOG_DIR = "logs"
-CREDS_LOG_FILE = os.path.join(LOG_DIR, "creds_audits.log")  # Đổi sang .log để ghi dòng đơn
-CMD_LOG_FILE = os.path.join(LOG_DIR, "cmd_audits.log")
+CREDS_LOG_FILE = os.path.join(LOG_DIR, "creds_audits.json")  # Đổi sang JSON
+CMD_LOG_FILE = os.path.join(LOG_DIR, "cmd_audits.json")
 
 os.makedirs(LOG_DIR, exist_ok=True)
 
-host_key = paramiko.RSAKey(filename='server.key', password='password') # private file key pair
+host_key = paramiko.RSAKey(filename='server.key', password='password')  # Private key file
 
-# Logging setup
-logging.basicConfig(level=logging.INFO, format="%(message)s")
-funnel_logger = logging.getLogger('FunnelLogger')
-funnel_handler = logging.FileHandler(CREDS_LOG_FILE)
-funnel_handler.setFormatter(logging.Formatter('%(message)s'))
-funnel_logger.addHandler(funnel_handler)
+def log_to_json(file_path, data):
+    # Nếu file chưa tồn tại, tạo mới danh sách
+    if not os.path.exists(file_path):
+        logs = []
+    else:
+        try:
+            with open(file_path, "r") as f:
+                logs = json.load(f)  # Đọc danh sách JSON
+        except json.JSONDecodeError:
+            logs = []  # Nếu lỗi, khởi tạo danh sách mới
 
-creds_logger = logging.getLogger('CredsLogger')
-creds_handler = logging.FileHandler(CMD_LOG_FILE)
-creds_handler.setFormatter(logging.Formatter('%(message)s'))
-creds_logger.addHandler(creds_handler)
+    logs.append(data)  # Thêm dữ liệu mới vào danh sách
+
+    with open(file_path, "w") as f:
+        json.dump(logs, f, indent=4)  # Ghi đè toàn bộ danh sách với format đẹp
 
 def emulated_shell(channel, client_ip):
     channel.send(b'corporate-jumpbox2$ ')
@@ -42,6 +46,8 @@ def emulated_shell(channel, client_ip):
         if char == b"\r":
             cmd_str = command.strip().decode()
             log_entry = {"timestamp": time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()), "ip": client_ip, "command": cmd_str}
+            log_to_json(CMD_LOG_FILE, log_entry)  # Ghi vào JSON
+            
             if command.strip() == b'exit':
                 response = b'\n Goodbye!\n'
                 channel.close()
@@ -55,7 +61,7 @@ def emulated_shell(channel, client_ip):
                 response = b'\n' + b"Go to boodah.com." + b"\r\n"
             else:
                 response = b"\n" + bytes(command.strip()) + b"\r\n"
-            creds_logger.info(json.dumps(log_entry))
+            
             channel.send(response)
             channel.send(b'corporate-jumpbox2$ ')
             command = b''
@@ -81,8 +87,8 @@ class Server(paramiko.ServerInterface):
             "username": username,
             "password": password
         }
-        funnel_logger.info(json.dumps(log_entry))
-        creds_logger.info(json.dumps(log_entry))
+        log_to_json(CREDS_LOG_FILE, log_entry)  # Ghi vào JSON
+        
         if self.input_username and self.input_password:
             if username == self.input_username and password == self.input_password:
                 return paramiko.AUTH_SUCCESSFUL

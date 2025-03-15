@@ -12,6 +12,8 @@ services:
       - elk
     volumes:
       - elasticsearch_data:/usr/share/elasticsearch/data
+    mem_limit: 2g
+    cpus: 1.0
 
   logstash:
     image: docker.elastic.co/logstash/logstash:8.7.0

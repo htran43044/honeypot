@@ -6,26 +6,29 @@ import os
 
 # Logging setup
 LOG_FILE = os.getenv("LOG_FILE", "logs/http_audits.json")  # Đường dẫn log trong Docker
-os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)  # Tạo thư mục logs nếu chưa có
 
 def append_to_json(entry):
     try:
+        data = []
         if os.path.exists(LOG_FILE):
-            with open(LOG_FILE, 'a') as f:
-                f.write(json.dumps(entry) + '\n') # ghi dong don vi fiebeat khong doc tot args
-        else:
-            data = []
-        
+            with open(LOG_FILE, 'r') as f:
+                try:
+                    data = json.load(f)
+                except json.JSONDecodeError:
+                    data = []
+
+        # Đảm bảo dữ liệu là danh sách
         if not isinstance(data, list):
             data = []
+
+        # Thêm entry mới vào danh sách
         data.append(entry)
-        
+
+        # Ghi đè lại file với JSON chuẩn
         with open(LOG_FILE, 'w') as f:
             json.dump(data, f, indent=4)
-    except json.JSONDecodeError:
-        with open(LOG_FILE, 'w') as f:
-            json.dump([entry], f, indent=4)
-    except IOError as e:
+
+    except (IOError, json.JSONDecodeError) as e:
         print(f"Error writing to JSON: {e}")
 
 def web_honeypot(input_username="admin@123", input_password="password"):

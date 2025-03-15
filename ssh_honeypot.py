@@ -23,14 +23,14 @@ def log_to_json(file_path, data):
     else:
         try:
             with open(file_path, "r") as f:
-                logs = json.load(f)  # Đọc danh sách JSON
+                logs = json.load(f) 
         except json.JSONDecodeError:
-            logs = []  # Nếu lỗi, khởi tạo danh sách mới
+            logs = []  
 
-    logs.append(data)  # Thêm dữ liệu mới vào danh sách
+    logs.append(data)  
 
     with open(file_path, "w") as f:
-        json.dump(logs, f, indent=4)  # Ghi đè toàn bộ danh sách với format đẹp
+        json.dump(logs, f, indent=4) 
 
 def emulated_shell(channel, client_ip):
     channel.send(b'corporate-jumpbox2$ ')

@@ -11,7 +11,7 @@ def get_vietnam_time():
     return datetime.now(vietnam_tz).strftime("%Y-%m-%d %H:%M:%S")
 
 # Logging setup
-LOG_FILE = os.getenv("LOG_FILE", "logs/http_audits.json")  # Đường dẫn log trong Docker
+LOG_FILE = os.getenv("LOG_FILE", "logs/http_audits.json") 
 
 def append_to_json(entry):
     try:
@@ -23,14 +23,11 @@ def append_to_json(entry):
                 except json.JSONDecodeError:
                     data = []
 
-        # Đảm bảo dữ liệu là danh sách
         if not isinstance(data, list):
             data = []
 
-        # Thêm entry mới vào danh sách
         data.append(entry)
 
-        # Ghi đè lại file với JSON chuẩn
         with open(LOG_FILE, 'w') as f:
             json.dump(data, f, indent=4)
 
@@ -62,7 +59,7 @@ def web_honeypot(database):
     def admin():
         ip_address = request.remote_addr
         log_entry = {
-            "timestamp": get_vietnam_time(),  # Chuẩn hóa timestamp
+            "timestamp": get_vietnam_time(),
             "ip": ip_address,
             "type": "admin_access"
         }
@@ -150,7 +147,7 @@ def web_honeypot(database):
 
 def run_web_honeypot(port=5000):
     run_web_honeypot_app = web_honeypot(database)
-    run_web_honeypot_app.run(debug=False, port=port, host="0.0.0.0")  # Tắt debug trong Docker
+    run_web_honeypot_app.run(debug=False, port=port, host="0.0.0.0")
 
 if __name__ == "__main__":
     run_web_honeypot(port=5000)

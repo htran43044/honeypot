@@ -9,7 +9,7 @@ import os
 # Constants
 SSH_BANNER = "SSH-2.0-MySSHServer_1.0"
 LOG_DIR = "logs"
-CREDS_LOG_FILE = os.path.join(LOG_DIR, "creds_audits.json")  # Đổi sang JSON
+CREDS_LOG_FILE = os.path.join(LOG_DIR, "creds_audits.json") 
 CMD_LOG_FILE = os.path.join(LOG_DIR, "cmd_audits.json")
 
 os.makedirs(LOG_DIR, exist_ok=True)
@@ -17,7 +17,7 @@ os.makedirs(LOG_DIR, exist_ok=True)
 host_key = paramiko.RSAKey(filename='server.key')  # Private key file
 
 def log_to_json(file_path, data):
-    # Nếu file chưa tồn tại, tạo mới danh sách
+
     if not os.path.exists(file_path):
         logs = []
     else:
@@ -46,7 +46,7 @@ def emulated_shell(channel, client_ip):
         if char == b"\r":
             cmd_str = command.strip().decode()
             log_entry = {"timestamp": time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()), "ip": client_ip, "command": cmd_str}
-            log_to_json(CMD_LOG_FILE, log_entry)  # Ghi vào JSON
+            log_to_json(CMD_LOG_FILE, log_entry) 
             
             if command.strip() == b'exit':
                 response = b'\n Goodbye!\n'
@@ -87,7 +87,7 @@ class Server(paramiko.ServerInterface):
             "username": username,
             "password": password
         }
-        log_to_json(CREDS_LOG_FILE, log_entry)  # Ghi vào JSON
+        log_to_json(CREDS_LOG_FILE, log_entry) 
         
         if self.input_username and self.input_password:
             if username == self.input_username and password == self.input_password:

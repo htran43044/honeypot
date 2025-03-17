@@ -4,6 +4,13 @@ import json
 import time
 import os
 
+from datetime import datetime
+import pytz
+
+def get_vietnam_time():
+    vietnam_tz = pytz.timezone('Asia/Ho_Chi_Minh')
+    return datetime.now(vietnam_tz).strftime("%Y-%m-%d %H:%M:%S")
+
 # Logging setup
 LOG_FILE = os.getenv("LOG_FILE", "logs/http_audits.json")  # Đường dẫn log trong Docker
 
@@ -45,10 +52,11 @@ def web_honeypot(input_username="admin@123", input_password="password"):
     def admin():
         ip_address = request.remote_addr
         log_entry = {
-            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()),  # Chuẩn hóa timestamp
+            "timestamp": get_vietnam_time(),  # Chuẩn hóa timestamp
             "ip": ip_address,
             "type": "admin_access"
         }
+        print(log_entry)
         append_to_json(log_entry)
         return render_template('admin.html')
 
@@ -58,7 +66,7 @@ def web_honeypot(input_username="admin@123", input_password="password"):
         password = request.form['password']
         ip_address = request.remote_addr
         log_entry = {
-            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()),
+            "timestamp": get_vietnam_time(),
             "ip": ip_address,
             "type": "login",
             "username": username,

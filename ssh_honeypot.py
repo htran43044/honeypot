@@ -6,6 +6,13 @@ import time
 import json
 import os
 
+from datetime import datetime
+import pytz
+
+def get_vietnam_time():
+    vietnam_tz = pytz.timezone('Asia/Ho_Chi_Minh')
+    return datetime.now(vietnam_tz).strftime("%Y-%m-%d %H:%M:%S")
+
 # Constants
 SSH_BANNER = "SSH-2.0-MySSHServer_1.0"
 LOG_DIR = "logs"
@@ -45,7 +52,7 @@ def emulated_shell(channel, client_ip):
         command += char
         if char == b"\r":
             cmd_str = command.strip().decode()
-            log_entry = {"timestamp": time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()), "ip": client_ip, "command": cmd_str}
+            log_entry = {"timestamp": get_vietnam_time(), "ip": client_ip, "command": cmd_str}
             log_to_json(CMD_LOG_FILE, log_entry)  # Ghi vào JSON
             
             if command.strip() == b'exit':
@@ -82,7 +89,7 @@ class Server(paramiko.ServerInterface):
     
     def check_auth_password(self, username, password):
         log_entry = {
-            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()),
+            "timestamp": get_vietnam_time(),
             "ip": self.client_ip,
             "username": username,
             "password": password

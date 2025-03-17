@@ -1,7 +1,7 @@
 flask
 paramiko
 requests
+logging
 elasticsearch
 filebeat
 logstash
-

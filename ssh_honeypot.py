@@ -14,7 +14,7 @@ CMD_LOG_FILE = os.path.join(LOG_DIR, "cmd_audits.json")
 
 os.makedirs(LOG_DIR, exist_ok=True)
 
-host_key = paramiko.RSAKey(filename='server.key', password='password')  # Private key file
+host_key = paramiko.RSAKey(filename='server.key')  # Private key file
 
 def log_to_json(file_path, data):
     # Nếu file chưa tồn tại, tạo mới danh sách

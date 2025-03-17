@@ -1,0 +1,7 @@
+flask
+paramiko
+requests
+elasticsearch
+filebeat
+logstash
+

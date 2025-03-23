@@ -2,6 +2,7 @@ flask
 paramiko
 requests
 logging
+pytz
 elasticsearch
 filebeat
 logstash

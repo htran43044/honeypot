@@ -57,7 +57,7 @@ def web_honeypot(database):
     
     @app.route('/admin')
     def admin():
-        ip_address = request.remote_addr
+        ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
         log_entry = {
             "timestamp": get_vietnam_time(),
             "ip": ip_address,
@@ -71,7 +71,7 @@ def web_honeypot(database):
     def login():
         username = request.form['username']
         password = request.form['password']
-        ip_address = request.remote_addr
+        ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
         log_entry = {
             "timestamp": get_vietnam_time(),
             "ip": ip_address,
@@ -87,7 +87,7 @@ def web_honeypot(database):
 
     @app.route('/upload', methods=['GET', 'POST'])
     def upload_file():
-        ip_address = request.remote_addr
+        ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
         if request.method == 'POST':
             file = request.files.get('file')
             if file:
@@ -127,7 +127,7 @@ def web_honeypot(database):
             fullname = request.form.get('fullname')
             password = request.form.get('password')
             email = request.form.get('email')
-            ip_address = request.remote_addr
+            ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
 
             if not fullname or not password or not email:
                 return "Missing form data!", 400
